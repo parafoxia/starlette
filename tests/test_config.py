@@ -56,6 +56,9 @@ def test_config(tmpdir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     def cast_to_int(v: typing.Any) -> int:
         return int(v)
 
+    def default_callable() -> str:
+        return "default"
+
     DEBUG = config("DEBUG", cast=bool)
     DATABASE_URL = config("DATABASE_URL", cast=URL)
     REQUEST_TIMEOUT = config("REQUEST_TIMEOUT", cast=int, default=10)
@@ -64,6 +67,12 @@ def test_config(tmpdir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     SECRET_KEY = config("SECRET_KEY", cast=Secret)
     UNSET_SECRET = config("UNSET_SECRET", cast=Secret, default=None)
     EMPTY_SECRET = config("EMPTY_SECRET", cast=Secret, default="")
+    DEFAULT_CALLABLE: str = config("DEFAULT_CALLABLE", default=default_callable)
+    DEFAULT_CALLABLE_CAST = config(
+        "DEFAULT_CALLABLE_CAST",
+        cast=lambda x: bytes(x, "utf-8'"),
+        default=default_callable,
+    )
     assert config("BOOL_AS_INT", cast=bool) is False
     assert config("BOOL_AS_INT", cast=cast_to_int) == 0
     assert config("DEFAULTED_BOOL", cast=cast_to_int, default=True) == 1
@@ -80,6 +89,8 @@ def test_config(tmpdir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     assert bool(SECRET_KEY)
     assert not bool(EMPTY_SECRET)
     assert not bool(UNSET_SECRET)
+    assert DEFAULT_CALLABLE == "default"
+    assert DEFAULT_CALLABLE_CAST == b"default"
 
     with pytest.raises(KeyError):
         config.get("MISSING")

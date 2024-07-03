@@ -114,7 +114,11 @@ class Config:
             value = self.file_values[key]
             return self._perform_cast(key, value, cast)
         if default is not undefined:
-            return self._perform_cast(key, default, cast)
+            return self._perform_cast(
+                key,
+                default() if callable(default) else default,
+                cast,
+            )
         raise KeyError(f"Config '{key}' is missing, and has no default.")
 
     def _read_file(self, file_name: str | Path) -> dict[str, str]:
